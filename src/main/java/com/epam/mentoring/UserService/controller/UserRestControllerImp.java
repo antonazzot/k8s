@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.epam.mentoring.UserService.convertor.UserMapper;
 import com.epam.mentoring.UserService.model.Usser;
 import com.epam.mentoring.UserService.model.web.request.UserCreateRequest;
+import com.epam.mentoring.UserService.model.web.request.UserUpdateRequest;
 import com.epam.mentoring.UserService.model.web.response.UserResponse;
 import com.epam.mentoring.UserService.service.UserService;
 
@@ -24,5 +25,24 @@ public class UserRestControllerImp implements UserRestController{
         Usser user = userService.createUser(usser);
         UserResponse userResponse = userMapper.convert(user);
         return ResponseEntity.ok(userResponse);
+    }
+
+    @Override
+    public ResponseEntity<UserResponse> getUser(Long id) {
+        UserResponse userResponse = userMapper.convert(userService.getUserById(id));
+        return ResponseEntity.ok(userResponse);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteUser(Long id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<UserResponse> updateUser(Long id, UserUpdateRequest userUpdateRequest) {
+        Usser user = userService.getUserById(id);
+        Usser usser = userMapper.updateUser(userUpdateRequest, user);
+        return ResponseEntity.ok(userMapper.convert(userService.saveUser(usser)));
     }
 }
