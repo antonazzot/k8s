@@ -42,29 +42,22 @@ spec:
 #           name: userdb
           env:
             - name: POSTGRES_USER
-              value: postgres
-#               valueFrom :
-#                 secretKeyRef :
-#                   name : psql-secrets
-#                   key :  POSTGRES_USER
+              valueFrom :
+                 secretKeyRef :
+                   name : user-db-secret
+                   key :  POSTGRES_USER
 
             - name: POSTGRES_PASSWORD
-              value: postgres
-#               valueFrom :
-#                 secretKeyRef :
-#                   name : psql-secrets
-#                   key :  POSTGRES_PASSWORD
+              valueFrom :
+                 secretKeyRef :
+                   name : user-db-secret
+                   key :  POSTGRES_PASSWORD
 
             - name: POSTGRES_DB # Setting Database Name from a 'ConfigMap'
-              value: userdb
-#               valueFrom :
-#                 configMapKeyRef :
-#                   name : db-config
-#                   key :  POSTGRES_DB
-
-#             - name: POSTGRES_HOST_AUTH_METHOD
-#                 value: "trust"
-
+              valueFrom :
+                 configMapKeyRef :
+                   name : user-db-confi-gmap
+                   key :  POSTGRES_DB
 
           ports:
             - containerPort: 5437
