@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+    userdb:
+        image: epamantontsyrkunou/userdb
+        container_name: userdbcontainer
+        ports:
+        - 5436:5432
+#        volumes:
+#         - ./sql/create.sql:/docker-entrypoint-initdb.d/create.sql
+#        - ./pg_data_docker_test:/var/lib/postgresql/data/pg_data
+        environment:
+            POSTGRES_DB: "userdb"
+            POSTGRES_PASSWORD: "postgres"
+            POSTGRES_USER: "postgres"
+        restart: always
+
+
+    app:
+        image: epamantontsyrkunou/userservice-1.0.0
+        container_name: userservice_container
+        ports:
+            - 7777:7777
+        environment:
+            PASSWORD: postgres
+            USERNAME: postgres
+            URL: jdbc:postgresql://userdb:5432/userdb
+        depends_on:
+            - userdb
+        restart: always

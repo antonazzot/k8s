@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.epam.mentoring.UserService.model.web.request.UserCreateRequest;
 import com.epam.mentoring.UserService.model.web.request.UserUpdateRequest;
+import com.epam.mentoring.UserService.model.web.request.feign.CreateUserPost;
 import com.epam.mentoring.UserService.model.web.response.UserResponse;
 
 @RequestMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -20,6 +21,10 @@ public interface UserRestController {
 
     @PostMapping
     ResponseEntity<UserResponse> createUser (@RequestBody UserCreateRequest userCreateRequest);
+    @PostMapping(value = "/createpost")
+    void createPost (@RequestBody CreateUserPost createUserPost);
+    @PostMapping(value = "/deletepost")
+    void deletePost (@RequestBody CreateUserPost createUserPost);
     @GetMapping
     ResponseEntity<UserResponse> getUser (@RequestParam(name = "id") Long id);
     @DeleteMapping
