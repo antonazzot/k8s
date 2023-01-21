@@ -266,7 +266,6 @@ spec:
                 configMapKeyRef:
                   name: user-db-config-map
                   key: FEIGN_URL
-
 ---
 
 apiVersion: v1
