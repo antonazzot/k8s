@@ -5,6 +5,29 @@ metadata:
 ---
 
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-db-config-map
+  namespace: epam-mentoring-kuber-namespace
+data:
+  POSTGRES_DB_USER : userdb
+  POSTGRES_DB_POST: postdb
+  URL_USER : jdbc:postgresql://host.docker.internal:5432/userdb
+  URL_POST : jdbc:postgresql://host.docker.internal:5432/postdb
+  FEIGN_URL: http://10.106.26.72:8181/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->8181
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-db-secret
+  namespace: epam-mentoring-kuber-namespace
+data:
+  POSTGRES_USER : cG9zdGdyZXM=
+  POSTGRES_PASSWORD : cG9zdGdyZXM=
+---
+
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: userdb-pv-claim # name of PVC essential for identifying the storage data
@@ -36,7 +59,6 @@ spec:
       storage: 1Gi
 ---
 
-# Configure 'Deployment' of  server
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -277,7 +299,7 @@ spec:
   selector:
     app: userservice
   ports:
-    - port: 7777 # The port that the service is running on in the cluster
+    - port: 8181 # The port that the service is running on in the cluster
       targetPort: 7777 # The port exposed by the service
       nodePort: 31515
   type: NodePort
@@ -292,7 +314,7 @@ spec:
   selector:
     app: postservice
   ports:
-    - port: 7777 # The port that the service is running on in the cluster
+    - port: 8181 # The port that the service is running on in the cluster
       targetPort: 8888 # The port exposed by the service
       nodePort: 31516 # The TCP port in cluster
   type: NodePort # type of the service.
@@ -330,11 +352,11 @@ spec:
               service:
                 name: userservice-svc
                 port:
-                  number: 7777
+                  number: 8181
           - path: /ps/?(.*)
             pathType: Prefix
             backend:
               service:
                 name: postservice-svc
                 port:
-                  number: 7777
+                  number: 8181

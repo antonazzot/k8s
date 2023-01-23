@@ -6,9 +6,6 @@ services:
         container_name: userdbcontainer
         ports:
         - 5436:5432
-#        volumes:
-#         - ./sql/create.sql:/docker-entrypoint-initdb.d/create.sql
-#        - ./pg_data_docker_test:/var/lib/postgresql/data/pg_data
         environment:
             POSTGRES_DB: "userdb"
             POSTGRES_PASSWORD: "postgres"

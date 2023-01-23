@@ -7,4 +7,4 @@ data:
   POSTGRES_DB_POST: postdb
   URL_USER : jdbc:postgresql://host.docker.internal:5432/userdb
   URL_POST : jdbc:postgresql://host.docker.internal:5432/postdb
-  FEIGN_URL: http://10.106.26.72:7777/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->7777
+  FEIGN_URL: http://10.106.26.72:8080/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->7777
