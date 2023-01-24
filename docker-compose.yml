@@ -2,26 +2,26 @@ version: '3'
 
 services:
     userdb:
-        image: epamantontsyrkunou/userdb
+        image: ${USER_DB_IMAGE:-postgres:14.2-alpine}
         container_name: userdbcontainer
         ports:
         - 5436:5432
         environment:
-            POSTGRES_DB: "userdb"
-            POSTGRES_PASSWORD: "postgres"
-            POSTGRES_USER: "postgres"
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+            POSTGRES_USER: ${POSTGRES_USER:-postgres}
         restart: always
 
 
     app:
-        image: epamantontsyrkunou/userservice-1.0.0
+        image: ${USER_SERVICE_IMAGE}
         container_name: userservice_container
         ports:
             - 7777:7777
         environment:
-            PASSWORD: postgres
-            USERNAME: postgres
-            URL: jdbc:postgresql://userdb:5432/userdb
+            PASSWORD: ${POSTGRES_PASSWORD}
+            USERNAME: ${POSTGRES_USER}
+            URL: ${URL}
         depends_on:
             - userdb
         restart: always

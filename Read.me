@@ -2,3 +2,18 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
 minikube addons enable ingress
 kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 7777:80
+kubectl apply -f ./mm.yaml -n epam-mentoring-kuber-namespace
+minikube mount "database/data:/mnt/data"
+
+
+kubectl get pods -n epam-mentoring-kuber-namespace
+
+kubectl delete deployment userdb -n epam-mentoring-kuber-namespace
+kubectl describe pod liveness-http -n epam-mentoring-kuber-namespace
+
+kubectl set image deployment.v1.apps/postservice-deployment postservice=epamantontsyrkunou/postservice-1.0.0 -n epam-mentoring-kuber-namespace
+
+kubectl rollout history deployment/postservice-deployment --revision=21 -n epam-mentoring-kuber-namespace
+kubectl rollout history deployment/postservice-deployment -n epam-mentoring-kuber-namespace
+kubectl rollout undo deployment/postservice-deployment --to-revision=20
+
