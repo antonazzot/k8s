@@ -31,11 +31,17 @@ scrape_configs:
   static_configs:
     - targets: ['192.168.0.9:8089']
 
-- job_name: 'JMP-1'
-  metrics_path: '/actuator/prometheus'
+- job_name: 'user-service'
+  metrics_path: '/us/actuator/prometheus'
   scrape_interval: 5s
   static_configs:
-    - targets: ['host.docker.internal:8089']
+    - targets: ['host.docker.internal:7777']
+
+- job_name: 'post-service'
+  metrics_path: '/ps/actuator/prometheus'
+  scrape_interval: 5s
+  static_configs:
+    - targets: ['host.docker.internal:8888']
 
 - job_name: 'JMP-2'
   metrics_path: '/actuator/prometheus'

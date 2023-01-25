@@ -15,5 +15,5 @@ kubectl set image deployment.v1.apps/postservice-deployment postservice=epamanto
 
 kubectl rollout history deployment/postservice-deployment --revision=21 -n epam-mentoring-kuber-namespace
 kubectl rollout history deployment/postservice-deployment -n epam-mentoring-kuber-namespace
-kubectl rollout undo deployment/postservice-deployment --to-revision=20
+kubectl rollout undo deployment/postservice-deployment --to-revision=20 -n epam-mentoring-kuber-namespace
 
