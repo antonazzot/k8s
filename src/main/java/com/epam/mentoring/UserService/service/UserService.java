@@ -2,6 +2,7 @@ package com.epam.mentoring.UserService.service;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.ObjectNotFoundException;
@@ -31,5 +32,9 @@ public class UserService {
 
     public Usser saveUser(Usser usser) {
       return   userRepository.save(usser);
+    }
+
+    public List<Usser> getAllUsers() {
+        return userRepository.findAll();
     }
 }

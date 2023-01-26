@@ -17,3 +17,8 @@ kubectl rollout history deployment/postservice-deployment --revision=21 -n epam-
 kubectl rollout history deployment/postservice-deployment -n epam-mentoring-kuber-namespace
 kubectl rollout undo deployment/postservice-deployment --to-revision=20 -n epam-mentoring-kuber-namespace
 
+helm upgrade -i my-chart ./mainchart
+helm install meapp ./mainchart -f second.values.yaml
+helm install meapp ./mainchart -f ./mainchart/second.values.yaml
+helm install myapp-1.2.0 ./mainchart -f ./mainchart/second.values.yaml
+

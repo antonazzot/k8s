@@ -1,6 +1,6 @@
 package com.epam.mentoring.UserService.controller;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +12,8 @@ import com.epam.mentoring.UserService.model.web.request.UserUpdateRequest;
 import com.epam.mentoring.UserService.model.web.request.feign.CreateUserPost;
 import com.epam.mentoring.UserService.model.web.response.UserResponse;
 import com.epam.mentoring.UserService.service.UserService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,6 +54,11 @@ public class UserRestControllerImp implements UserRestController{
     public ResponseEntity<UserResponse> getUser(Long id) {
         UserResponse userResponse = userMapper.convert(userService.getUserById(id));
         return ResponseEntity.ok(userResponse);
+    }
+
+    @Override
+    public ResponseEntity<List<UserResponse>> getAllUser() {
+       return ResponseEntity.ok(userService.getAllUsers().stream().map(userMapper::convert).toList());
     }
 
     @Override

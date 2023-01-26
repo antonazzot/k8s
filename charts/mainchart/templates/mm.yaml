@@ -1,75 +1,42 @@
+
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: epam-mentoring-kuber-namespace
+  name: {{ .Values.namespace }}
 ---
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: user-db-config-map
-  namespace: epam-mentoring-kuber-namespace
+  name: {{ .Release.Name }}-db-config-map
+    {{- template "mychart.labels" . }}
+  namespace: {{ .Values.namespace }}
 data:
   POSTGRES_DB_USER : userdb
   POSTGRES_DB_POST: postdb
   URL_USER : jdbc:postgresql://10.106.125.243:5432/userdb
   URL_POST : jdbc:postgresql://10.96.237.177:5432/postdb
   FEIGN_URL: http://10.109.111.111:8181/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->8181
-#  INIT_USER_DB_SQL: |"
 ---
 
 apiVersion: v1
 kind: Secret
 metadata:
-  name: user-db-secret
-  namespace: epam-mentoring-kuber-namespace
+  name: {{ .Release.Name }}-db-secret
+  namespace: {{ .Values.namespace }}
 data:
   POSTGRES_USER : cG9zdGdyZXM=
   POSTGRES_PASSWORD : cG9zdGdyZXM=
 ---
 
 
-
 # USER_DB
-
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: my-local-userdb-storage
-  namespace: epam-mentoring-kuber-namespace
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
----
-
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: userdb-local
-  namespace: epam-mentoring-kuber-namespace
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: my-local-userdb-storage
-  local:
-    path: /mnt/data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - minikube
----
 
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: userdb
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
   labels:
     app: userdb
     tier: database
@@ -79,7 +46,7 @@ spec:
       app: userdb
       tier: database
   serviceName: userdb
-  replicas: 1
+  replicas: {{ .Values.stateful.replicas }}
   minReadySeconds: 5
   template:
     metadata:
@@ -94,18 +61,18 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_USER
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: user-db-config-map
+                  name: {{ .Release.Name }}-db-config-map
                   key: POSTGRES_DB_USER
           ports:
             - containerPort: 5432
@@ -128,7 +95,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: userdb
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
   labels:
     app: userdb
     tier: database
@@ -141,103 +108,40 @@ spec:
     tier: database
 ---
 
-
-#USER_SERVICES
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: userservice-deployment
-  namespace: epam-mentoring-kuber-namespace
-spec:
-  selector:
-    matchLabels:
-      app: userservice
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        app: userservice
-    spec:
-      containers:
-        - name: userservice
-          image: epamantontsyrkunou/userservice-1.0.1
-          ports:
-            - containerPort: 7777
-          env:
-            - name: PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: user-db-secret
-                  key: POSTGRES_PASSWORD
-
-            - name: USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: user-db-secret
-                  key: POSTGRES_USER
-
-            - name: URL
-              valueFrom:
-                configMapKeyRef:
-                  name: user-db-config-map
-                  key: URL_USER
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 7777
-            initialDelaySeconds: 50
-            timeoutSeconds: 2
-            periodSeconds: 3
-            failureThreshold: 2
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 7777
-            initialDelaySeconds: 100
-            timeoutSeconds: 2
-            periodSeconds: 8
-            failureThreshold: 1
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: userservice-svc
-  namespace: epam-mentoring-kuber-namespace
-spec:
-  selector:
-    app: userservice
-  ports:
-    - port: 8181 # The port that the service is running on in the cluster
-      targetPort: 7777 # The port exposed by the service
-      nodePort: 31515
-  type: NodePort
----
-
-
-# POST_DB
-
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: my-local-postdb-storage
-  namespace: epam-mentoring-kuber-namespace
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
----
-
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postdb-local
+  name: {{ .Release.Name }}-userdb-local
   namespace: epam-mentoring-kuber-namespace
 spec:
   capacity:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: my-local-userdb-storage
+  local:
+    path: /mnt/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name:  {{ .Release.Name }}-postdb-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   storageClassName: my-local-postdb-storage
   local:
     path: /mnt/data
@@ -251,11 +155,87 @@ spec:
                 - minikube
 ---
 
+#USER_SERVICES
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userservice-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: userservice
+  replicas: {{ .Values.deployment.replicas }}
+  template:
+    metadata:
+      labels:
+        app: userservice
+    spec:
+      containers:
+        - name: userservice
+          image: epamantontsyrkunou/userservice-1.0.2
+          ports:
+            - containerPort: 7777
+          env:
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: POSTGRES_USER
+
+            - name: URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Release.Name }}-db-config-map
+                  key: URL_USER
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 7777
+            initialDelaySeconds: 300
+            timeoutSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 7777
+            initialDelaySeconds: 300
+            timeoutSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 5
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: userservice-svc
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: userservice
+  ports:
+    - port: 8181 # The port that the service is running on in the cluster
+      targetPort: 7777 # The port exposed by the service
+      nodePort: {{ .Values.userservice.port }}
+  type: NodePort
+---
+
+
+# POST_DB
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postdb
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
   labels:
     app: postdb
     tier: database
@@ -265,7 +245,7 @@ spec:
       app: postdb
       tier: database
   serviceName: postdb
-  replicas: 1
+  replicas: {{ .Values.stateful.replicas }}
   minReadySeconds: 5
   template:
     metadata:
@@ -280,18 +260,18 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_USER
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: user-db-config-map
+                  name: {{ .Release.Name }}-db-config-map
                   key: POSTGRES_DB_POST
           ports:
             - containerPort: 5432
@@ -314,7 +294,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postdb
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
   labels:
     app: postdb
     tier: database
@@ -333,12 +313,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postservice-deployment
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
 spec:
   selector:
     matchLabels:
       app: postservice
-  replicas: 2
+  replicas: {{ .Values.deployment.replicas }}
   template:
     metadata:
       labels:
@@ -353,96 +333,81 @@ spec:
             - name: PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_PASSWORD
 
             - name: USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: user-db-secret
+                  name: {{ .Release.Name }}-db-secret
                   key: POSTGRES_USER
 
             - name: URL
               valueFrom:
                 configMapKeyRef:
-                  name: user-db-config-map
+                  name: {{ .Release.Name }}-db-config-map
                   key: URL_POST
 
             - name: FEIGN_URL
               valueFrom:
                 configMapKeyRef:
-                  name: user-db-config-map
+                  name: {{ .Release.Name }}-db-config-map
                   key: FEIGN_URL
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8888
-            initialDelaySeconds: 50
-            timeoutSeconds: 2
-            periodSeconds: 3
-            failureThreshold: 2
+            initialDelaySeconds: 300
+            timeoutSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8888
-            initialDelaySeconds: 100
-            timeoutSeconds: 2
-            periodSeconds: 8
-            failureThreshold: 1
+            initialDelaySeconds: 300
+            timeoutSeconds: 10
+            periodSeconds: 5
+            failureThreshold: 5
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
   name: postservice-svc
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
 spec:
   selector:
     app: postservice
   ports:
     - port: 8181 # The port that the service is running on in the cluster
       targetPort: 8888 # The port exposed by the service
-      nodePort: 31516 # The TCP port in cluster
-  type: NodePort # type of the service.
+      nodePort: {{ .Values.postservice.port }} # The TCP port in cluster
+  type: NodePort
 ---
 
-
-#NETWORKING
-
-apiVersion: networking.k8s.io/v1
-kind: IngressClass
-metadata:
-  labels:
-    app.kubernetes.io/component: controller
-  name: nginx-example
-  namespace: epam-mentoring-kuber-namespace
-  annotations:
-    ingressclass.kubernetes.io/is-default-class: "true"
-spec:
-  controller: k8s.io/ingress-nginx
----
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minimal-ingress
-  namespace: epam-mentoring-kuber-namespace
+  namespace: {{ .Values.namespace }}
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
-  ingressClassName: nginx-example
+#  ingressClassName: nginx-example
   rules:
     - http:
         paths:
-          - path: /us/?(.*)
+          - path: /uss/?(.*)
             pathType: Prefix
             backend:
               service:
                 name: userservice-svc
                 port:
                   number: 8181
-          - path: /ps/?(.*)
+          - path: /pss/?(.*)
             pathType: Prefix
             backend:
               service:

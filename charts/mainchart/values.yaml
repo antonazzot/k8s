@@ -1,0 +1,9 @@
+namespace: my-helm-namespace
+deployment:
+  replicas: 2
+stateful:
+  replicas: 1
+postservice:
+  port: 31300
+userservice:
+  port: 31200
