@@ -14,9 +14,9 @@ metadata:
 data:
   POSTGRES_DB_USER : userdb
   POSTGRES_DB_POST: postdb
-  URL_USER : jdbc:postgresql://10.106.125.243:5432/userdb
-  URL_POST : jdbc:postgresql://10.96.237.177:5432/postdb
-  FEIGN_URL: http://10.109.111.111:8181/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->8181
+  URL_USER : jdbc:postgresql://10.98.222.203:5432/userdb
+  URL_POST : jdbc:postgresql://10.105.76.164:5432/postdb
+  FEIGN_URL: http://10.99.31.119:8181/ # must matches with userservice NodePort cluster ip -> 10.106.26.72  and port ->8181
 ---
 
 apiVersion: v1
